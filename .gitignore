@@ -1,0 +1,5 @@
+__pycache__/
+desertsim/
+dunesim_dataset/
+data_config.csv
+dunesim
