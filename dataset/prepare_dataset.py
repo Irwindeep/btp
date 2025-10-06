@@ -43,7 +43,7 @@ else:
         windX = r * np.cos(theta)
         windY = r * np.sin(theta)
 
-        preSimSteps = np.exp(np.random.uniform(low=np.log(10), high=np.log(100)))
+        preSimSteps = int(np.exp(np.random.uniform(low=np.log(10), high=np.log(50))))
 
         df.loc[len(df)] = [rMin, rMax, windX, windY, 0, 0, preSimSteps]
 
@@ -57,7 +57,7 @@ else:
         windX = r * np.cos(theta)
         windY = r * np.sin(theta)
 
-        preSimSteps = np.exp(np.random.uniform(low=np.log(10), high=np.log(100)))
+        preSimSteps = int(np.exp(np.random.uniform(low=np.log(10), high=np.log(50))))
 
         df.loc[len(df)] = [rMin, rMax, windX, windY, 0, 0, preSimSteps]
 
@@ -71,7 +71,7 @@ else:
         windX = r * np.cos(theta)
         windY = r * np.sin(theta)
 
-        preSimSteps = np.exp(np.random.uniform(low=np.log(10), high=np.log(100)))
+        preSimSteps = int(np.exp(np.random.uniform(low=np.log(10), high=np.log(50))))
 
         df.loc[len(df)] = [rMin, rMax, windX, windY, 1, 0, preSimSteps]
 
@@ -87,7 +87,7 @@ else:
         windX = r * np.cos(theta)
         windY = r * np.sin(theta)
 
-        preSimSteps = np.exp(np.random.uniform(low=np.log(10), high=np.log(150)))
+        preSimSteps = int(np.exp(np.random.uniform(low=np.log(10), high=np.log(50))))
 
         df.loc[len(df)] = [rMin, rMax, windX, windY, 0, 1, preSimSteps]
 
