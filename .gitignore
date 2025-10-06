@@ -1,4 +1,7 @@
 __pycache__/
 
+# dataset files
+dunesim_dataset/
+
 # desertscape simulation API
 *.so
