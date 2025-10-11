@@ -26,7 +26,7 @@ for i in tqdm(range(num_samples), desc="Preparing Dataset"):
     abration = np.random.choice([0, 1], p=[0.7, 0.3])
 
     r = np.random.uniform(0, 1)
-    num_steps = int(100 + 200 * (r**4))
+    num_steps = int(100 + 100 * (r**4))
 
     dune = DuneSediment(
         nx,
