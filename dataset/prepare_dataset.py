@@ -1,7 +1,6 @@
 import os
 import numpy as np
 
-from wind import generate_random_wind_field
 from dune import DuneSediment
 from tqdm.auto import tqdm
 
@@ -23,18 +22,11 @@ for i in tqdm(range(num_samples), desc="Preparing Dataset"):
     mean_wind_x = mean_wind_speed * np.cos(theta)
     mean_wind_y = mean_wind_speed * np.sin(theta)
 
-    r = np.random.uniform(0, 1)
-    num_steps = 5 * int(30 + 50 * (r**4))
-
-    wind_field = generate_random_wind_field(
-        N=nx,
-        timesteps=1,
-        mean_wind=(mean_wind_x, mean_wind_y),
-        random_seed=i,
-    )
-
     vegetation = np.random.choice([0, 1], p=[0.7, 0.3])
     abration = np.random.choice([0, 1], p=[0.7, 0.3])
+
+    r = np.random.uniform(0, 1)
+    num_steps = int(100 + 200 * (r**4))
 
     dune = DuneSediment(
         nx,
@@ -45,9 +37,6 @@ for i in tqdm(range(num_samples), desc="Preparing Dataset"):
         vegetation_on=bool(vegetation),
         abrasion_on=bool(abration),
     )
-
-    dune.wind_x = wind_field[0, :, :, 0]
-    dune.wind_y = wind_field[0, :, :, 1]
 
     os.makedirs(os.path.join(DATA_DIR, f"{i:04d}"), exist_ok=True)
 
@@ -78,6 +67,5 @@ for i in tqdm(range(num_samples), desc="Preparing Dataset"):
         np.savez_compressed(
             os.path.join(sediment_path, f"{step:04d}.npz"), dune.sediments
         )
-
 
 print(f"Dataset prepared successfully at - `{DATA_DIR}`")
