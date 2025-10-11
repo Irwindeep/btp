@@ -1,12 +1,10 @@
-import numpy as np
 from typing import Tuple
+import numpy as np
+from numpy.typing import NDArray
+
+FloatArray = NDArray[np.float32]
 
 class DuneSediment:
-    nx: int
-    ny: int
-    vegetation_on: bool
-    abrasion_on: bool
-
     def __init__(
         self,
         nx: int,
@@ -18,10 +16,17 @@ class DuneSediment:
         vegetation_on: bool = False,
         abrasion_on: bool = False,
     ) -> None: ...
-    @property
-    def bedrock(self) -> np.ndarray: ...
-    @property
-    def sediments(self) -> np.ndarray: ...
-    @property
-    def vegetation(self) -> np.ndarray: ...
+
+    nx: int
+    ny: int
+    vegetation_on: bool
+    abrasion_on: bool
+
+    bedrock: FloatArray
+    sediments: FloatArray
+    vegetation: FloatArray
+    wind_x: FloatArray
+    wind_y: FloatArray
+    bedrock_hardness: FloatArray
+
     def step(self) -> None: ...
