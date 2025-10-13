@@ -5,3 +5,6 @@ dunesim_dataset/
 
 # desertscape simulation API
 *.so
+
+# model weights
+weights/
