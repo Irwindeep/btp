@@ -22,7 +22,7 @@ def ddpm_sampler(
     x = torch.randn(shape, device=DEVICE)
 
     for t in reversed(range(T)):
-        timesteps = torch.full((N,), t, dtype=torch.long, device=DEVICE)
+        timesteps = torch.full((N,), t, dtype=torch.long).to(DEVICE)
         epsilon = model(x, timesteps, past, aux)
 
         alpha = ALPHAS[t]
