@@ -3,7 +3,11 @@ import torch.nn as nn
 
 from typing import Tuple
 
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+
 NUM_STEPS = 1000
+BETAS = torch.linspace(1e-4, 0.02, NUM_STEPS).to(DEVICE)
+ALPHAS = torch.cumprod(1 - BETAS.flip(0), 0).flip(0).to(DEVICE)
 
 
 @torch.no_grad()
@@ -13,21 +17,12 @@ def ddpm_sampler(
     past: torch.Tensor,
     aux: torch.Tensor,
     shape: Tuple[int, ...],
-    device: str,
 ) -> torch.Tensor:
-    DEVICE = device
-
-    BETAS = torch.linspace(1e-4, 0.02, NUM_STEPS)
-    ALPHAS = torch.cumprod(1 - BETAS.flip(0), 0).flip(0)
-
-    BETAS = BETAS.to(DEVICE)
-    ALPHAS = ALPHAS.to(DEVICE)
-
     N, *_ = shape
     x = torch.randn(shape, device=DEVICE)
 
     for t in reversed(range(T)):
-        timesteps = torch.full((N,), t, dtype=torch.long).to(DEVICE)
+        timesteps = torch.full((N,), t, dtype=torch.long, device=DEVICE)
         epsilon = model(x, timesteps, past, aux)
 
         alpha = ALPHAS[t]
@@ -61,16 +56,8 @@ def ddim_sampler(
     past: torch.Tensor,
     aux: torch.Tensor,
     shape: Tuple[int, ...],
-    device: str,
     eta: float = 0.0,
 ) -> torch.Tensor:
-    DEVICE = device
-
-    BETAS = torch.linspace(1e-4, 0.02, NUM_STEPS)
-    ALPHAS = torch.cumprod(1 - BETAS.flip(0), 0).flip(0)
-
-    BETAS = BETAS.to(DEVICE)
-    ALPHAS = ALPHAS.to(DEVICE)
     N, *_ = shape
 
     timesteps = torch.linspace(0, T - 1, steps, dtype=torch.long, device=DEVICE)
