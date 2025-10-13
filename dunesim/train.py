@@ -4,11 +4,11 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 
-NUM_STEPS = 1000
-BETAS = torch.linspace(1e-4, 0.02, NUM_STEPS)
-ALPHAS = torch.cumprod(1 - BETAS.flip(0), 0).flip(0)
-
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+
+NUM_STEPS = 1000
+BETAS = torch.linspace(1e-4, 0.02, NUM_STEPS).to(DEVICE)
+ALPHAS = torch.cumprod(1 - BETAS.flip(0), 0).flip(0).to(DEVICE)
 
 
 def val_epoch(
