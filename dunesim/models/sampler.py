@@ -7,7 +7,7 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 NUM_STEPS = 1000
 BETAS = torch.linspace(1e-4, 0.02, NUM_STEPS).to(DEVICE)
-ALPHAS = torch.cumprod(1 - BETAS.flip(0), 0).flip(0).to(DEVICE)
+ALPHAS = torch.cumprod(1 - BETAS, 0).to(DEVICE)
 
 
 @torch.no_grad()
@@ -60,7 +60,7 @@ def ddim_sampler(
 ) -> torch.Tensor:
     N, *_ = shape
 
-    timesteps = torch.linspace(0, T - 1, steps, dtype=torch.long, device=DEVICE)
+    timesteps = torch.linspace(T - 1, 0, steps, dtype=torch.long, device=DEVICE)
     x = torch.randn(shape, device=DEVICE)
 
     for i, t in enumerate(timesteps):
