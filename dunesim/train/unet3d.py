@@ -44,13 +44,9 @@ def train_epoch(
     train_loss, num_batches = 0.0, len(train_loader)
     pbar = tqdm(train_loader, desc=desc)
     for batch, (past, future, aux) in enumerate(pbar, start=1):
-        T = past.size(1)
         past = past.to(DEVICE)
         future = future.to(DEVICE)
         aux = aux.to(DEVICE)
-
-        aux = aux.unsqueeze(1)
-        aux = aux.expand(-1, T, -1, -1, -1)
 
         pred = model(past, aux)
         pred = pred[:, :, :2, :, :]
