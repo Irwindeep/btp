@@ -110,7 +110,9 @@ class UNet3D(nn.Module):
         # use batchnorm and relu for now as heightmap must always be positive
         self.final = Conv3dBlock(down_channels, out_channels)
 
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
+    def forward(self, input: torch.Tensor, aux: torch.Tensor) -> torch.Tensor:
+        input = torch.cat([input, aux], dim=1)
+
         output = self.initial(input)
         output, outputs = self.encoder(output)
         output = self.bottleneck(output)
