@@ -111,7 +111,7 @@ class UNet3D(nn.Module):
         self.final = Conv3dBlock(down_channels, out_channels)
 
     def forward(self, input: torch.Tensor, aux: torch.Tensor) -> torch.Tensor:
-        input = torch.cat([input, aux], dim=1)
+        input = torch.cat([input, aux], dim=2)
 
         output = self.initial(input)
         output, outputs = self.encoder(output)
