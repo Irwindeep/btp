@@ -6,8 +6,8 @@ from torch.utils.data import Dataset
 from typing import Tuple, Any
 
 
-class DuneSimDataset(Dataset):
-    def __init__(self, root: str, memory: int, future: int, seed: int = 12) -> None:
+class DunesimDataset(Dataset):
+    def __init__(self, root: str, memory: int, future: int) -> None:
         super().__init__()
 
         self.root = root
@@ -16,24 +16,27 @@ class DuneSimDataset(Dataset):
         self.future = future
 
         self.data_dirs = [os.path.join(self.root, dir) for dir in os.listdir(self.root)]
-        np.random.seed(seed)
+
+        self.samples = []
+        for data_dir in self.data_dirs:
+            bedrock_dir = os.path.join(data_dir, "bedrock")
+            num_frames = len(os.listdir(bedrock_dir))
+            for idx in range(self.mem, num_frames - self.future):
+                self.samples.append((data_dir, idx))
 
     def __len__(self) -> int:
-        return len(self.data_dirs)
+        return len(self.samples)
 
     def __getitem__(self, idx: int) -> Tuple[Any, ...]:
-        data_dir = self.data_dirs[idx]
+        data_dir, idx = self.samples[idx]
 
         bedrock_dir = os.path.join(data_dir, "bedrock")
         sediments_dir = os.path.join(data_dir, "sediments")
-
-        num_frames = len(os.listdir(bedrock_dir))
 
         vegetation_path = os.path.join(data_dir, "vegetation.npz")
         resistance_path = os.path.join(data_dir, "bedrock_hardness.npz")
         wind_field_path = os.path.join(data_dir, "wind_field.npz")
 
-        idx = np.random.randint(low=self.mem, high=num_frames - self.future)
         ip_indices = range(idx - self.mem, idx)
         op_indices = range(idx, idx + self.future)
 
