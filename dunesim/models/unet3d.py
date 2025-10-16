@@ -89,7 +89,6 @@ class UNet3D(nn.Module):
         out_channels: int,
         down_channels: int,
         aux_channels: int = 1,
-        downsampling: int = 2,
         channel_multipliers: List[int] = [1, 2, 2, 4],
     ) -> None:
         """
@@ -101,15 +100,7 @@ class UNet3D(nn.Module):
         self.aux_channels = aux_channels
         self.aux_embedding = Conv3dBlock(aux_channels, in_channels)
 
-        self.initial = nn.Sequential(
-            nn.Conv3d(in_channels, down_channels, kernel_size=3, padding=1),
-            nn.Conv3d(
-                down_channels,
-                down_channels,
-                kernel_size=(1, downsampling, downsampling),
-                stride=(1, downsampling, downsampling),
-            ),
-        )
+        self.initial = nn.Conv3d(in_channels, down_channels, kernel_size=3, padding=1)
 
         encoder_channels = [down_channels * i for i in channel_multipliers]
         self.encoder = Encoder3D(channels=encoder_channels)
@@ -120,14 +111,11 @@ class UNet3D(nn.Module):
         self.decoder = Decoder3D(encoder_channels=encoder_channels)
 
         # use batchnorm and relu for now as heightmap must always be positive
-        self.final = nn.Sequential(
-            nn.Upsample(scale_factor=(1, downsampling, downsampling)),
-            nn.Conv3d(down_channels, down_channels, kernel_size=3, padding=1),
-            Conv3dBlock(down_channels, out_channels),
-        )
+        self.final = Conv3dBlock(down_channels, out_channels)
 
     def forward(self, input: torch.Tensor, aux: torch.Tensor) -> torch.Tensor:
-        aux = self.aux_embedding(aux.unsqueeze(1))
+        if len(aux.size()) == 4:
+            aux = self.aux_embedding(aux.unsqueeze(1))
         input = torch.cat([input, aux], dim=2)
 
         output = self.initial(input)
