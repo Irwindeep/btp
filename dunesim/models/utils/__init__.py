@@ -3,7 +3,7 @@ import torch
 
 from dunesim.models.utils.attn import AttentionBlock
 from dunesim.models.utils.residual import ResidualBlock
-from dunesim.models.utils.conv import UpSample
+from dunesim.models.utils.conv import Conv3dBlock, UpSample
 
 
 def timestep_embd(timesteps: torch.Tensor, embd_dim: int) -> torch.Tensor:
@@ -23,6 +23,7 @@ def timestep_embd(timesteps: torch.Tensor, embd_dim: int) -> torch.Tensor:
 
 __all__ = [
     "AttentionBlock",
+    "Conv3dBlock",
     "ResidualBlock",
     "timestep_embd",
     "UpSample",
