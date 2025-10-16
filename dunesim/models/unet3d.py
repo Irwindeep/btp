@@ -127,7 +127,7 @@ class UNet3D(nn.Module):
         )
 
     def forward(self, input: torch.Tensor, aux: torch.Tensor) -> torch.Tensor:
-        aux = self.aux_embedding(aux.unsqueeze(0))
+        aux = self.aux_embedding(aux.unsqueeze(1))
         input = torch.cat([input, aux], dim=2)
 
         output = self.initial(input)
