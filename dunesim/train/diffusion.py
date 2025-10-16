@@ -4,7 +4,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+from dunesim import DEVICE
 
 NUM_STEPS = 1000
 BETAS = torch.linspace(1e-4, 0.02, NUM_STEPS).to(DEVICE)
@@ -18,7 +18,7 @@ def val_epoch(
 
     val_loss, num_batches = 0.0, len(val_loader)
     with torch.no_grad():
-        for curr, past, aux in val_loader:
+        for past, curr, aux in val_loader:
             N, T, C, H, W = curr.size()
             curr = curr.reshape(N, T * C, H, W).to(DEVICE)
             past = past.reshape(N, T * C, H, W).to(DEVICE)
@@ -49,7 +49,7 @@ def train_epoch(
 
     train_loss, num_batches = 0.0, len(train_loader)
     pbar = tqdm(train_loader, desc=desc)
-    for batch, (curr, past, aux) in enumerate(pbar, start=1):
+    for batch, (past, curr, aux) in enumerate(pbar, start=1):
         N, T, C, H, W = curr.size()
         curr = curr.reshape(N, T * C, H, W).to(DEVICE)
         past = past.reshape(N, T * C, H, W).to(DEVICE)
