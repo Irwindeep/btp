@@ -9,15 +9,14 @@ np.random.seed(12)
 DATA_DIR = "dunesim_dataset"
 os.makedirs(DATA_DIR, exist_ok=True)
 
-num_samples = 1000
 nx, ny = 128, 128  # low resolution data for experiments
 
-for i in tqdm(range(num_samples), desc="Preparing Dataset"):
+for i in tqdm(range(360), desc="Preparing Dataset"):
     r_min = np.random.uniform(low=0.5, high=5)
     r_max = r_min + np.random.uniform(low=0.0, high=3.0)
 
     mean_wind_speed = np.random.uniform(low=2.0, high=10.0)
-    theta = np.random.uniform(low=0.0, high=2 * np.pi)
+    theta = np.deg2rad(i)
 
     mean_wind_x = mean_wind_speed * np.cos(theta)
     mean_wind_y = mean_wind_speed * np.sin(theta)
