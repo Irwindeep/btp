@@ -4,11 +4,16 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 
+from typing import Tuple
 from dunesim import DEVICE
+
+_DataLoader = DataLoader[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]
 
 
 def val_epoch(
-    model: nn.Module, val_loader: DataLoader[torch.Tensor], loss_fn: nn.Module
+    model: nn.Module,
+    val_loader: _DataLoader,
+    loss_fn: nn.Module,
 ) -> float:
     model.eval()
 
@@ -23,10 +28,12 @@ def val_epoch(
             aux = aux.unsqueeze(1)
             aux = aux.expand(-1, T, -1, -1, -1)
 
-            pred = model(past, aux)
-            pred = pred[:, :, :2, :, :]
+            with torch.autocast(DEVICE):
+                pred = model(past, aux)
+                pred = pred[:, :, :2, :, :]
 
-            loss = loss_fn(pred, future)
+                loss = loss_fn(pred, future)
+
             val_loss += loss.item()
 
     return val_loss / num_batches
@@ -34,9 +41,10 @@ def val_epoch(
 
 def train_epoch(
     model: nn.Module,
-    train_loader: DataLoader[torch.Tensor],
+    train_loader: _DataLoader,
     loss_fn: nn.Module,
     optim: torch.optim.Optimizer,
+    scaler: torch.GradScaler,
     desc: str,
 ) -> float:
     model.train()
@@ -48,13 +56,15 @@ def train_epoch(
         future = future.to(DEVICE)
         aux = aux.to(DEVICE)
 
-        pred = model(past, aux)
-        pred = pred[:, :, :2, :, :]
+        with torch.autocast(DEVICE):
+            pred = model(past, aux)
+            pred = pred[:, :, :2, :, :]
+            loss = loss_fn(pred, future)
 
         optim.zero_grad()
-        loss = loss_fn(pred, future)
-        loss.backward()
-        optim.step()
+        scaler.scale(loss).backward()
+        scaler.step(optim)
+        scaler.update()
 
         train_loss += loss.item()
         pbar.set_postfix(
