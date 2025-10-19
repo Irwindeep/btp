@@ -82,37 +82,13 @@ class Decoder3D(nn.Module):
         return output
 
 
-class FiLM(nn.Module):
-    def __init__(self, in_channels: int, T: int, hidden_dim: int = 64) -> None:
-        super(FiLM, self).__init__()
-
-        self.encoder = nn.Sequential(
-            nn.Conv2d(in_channels, hidden_dim, kernel_size=1),
-            nn.ReLU(),
-            nn.AdaptiveAvgPool2d(1),
-        )
-
-        self.linear = nn.Linear(hidden_dim, 2 * T)
-
-    def forward(self, input: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
-        output = self.encoder(input)
-        output = output.view(output.size(0), -1)
-        film = self.linear(output)
-
-        gamma, beta = torch.chunk(film, chunks=2, dim=1)
-        gamma = gamma.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
-        beta = beta.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
-
-        return gamma, beta
-
-
 class UNet3D(nn.Module):
     def __init__(
         self,
         in_channels: int,
         out_channels: int,
         down_channels: int,
-        aux_channels: int = 4,
+        aux_channels: int = 1,
         channel_multipliers: List[int] = [1, 2, 2, 4],
     ) -> None:
         """
@@ -121,7 +97,7 @@ class UNet3D(nn.Module):
             out_channels: number of output time channels i.e., future
         """
         super(UNet3D, self).__init__()
-        self.film_layer = FiLM(aux_channels, in_channels)
+        self.aux_embedding = Conv3dBlock(aux_channels, in_channels)
 
         self.initial = nn.Conv3d(in_channels, down_channels, kernel_size=3, padding=1)
 
@@ -137,8 +113,11 @@ class UNet3D(nn.Module):
         self.final = Conv3dBlock(down_channels, out_channels)
 
     def forward(self, input: torch.Tensor, aux: torch.Tensor) -> torch.Tensor:
-        gamma, beta = self.film_layer(aux)
-        input = gamma * input + beta
+        if len(aux.size()) == 4:
+            aux = self.aux_embedding(aux.unsqueeze(1))
+
+        ch = input.size(2)  # [N, T, C, H, W]
+        input = torch.cat([input, aux], dim=2)
 
         output = self.initial(input)
         output, outputs = self.encoder(output)
@@ -146,4 +125,4 @@ class UNet3D(nn.Module):
         output = self.decoder((output, outputs))
         output = self.final(output)
 
-        return output
+        return output[:, :, :ch, :, :]
