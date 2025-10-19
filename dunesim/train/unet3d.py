@@ -30,8 +30,6 @@ def val_epoch(
 
             with torch.autocast(DEVICE):
                 pred = model(past, aux)
-                pred = pred[:, :, :2, :, :]
-
                 loss = loss_fn(pred, future)
 
             val_loss += loss.item()
@@ -58,7 +56,6 @@ def train_epoch(
 
         with torch.autocast(DEVICE):
             pred = model(past, aux)
-            pred = pred[:, :, :2, :, :]
             loss = loss_fn(pred, future)
 
         optim.zero_grad()
