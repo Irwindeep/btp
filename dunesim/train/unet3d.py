@@ -1,3 +1,4 @@
+from functools import partial
 import torch
 import torch.nn as nn
 
@@ -7,6 +8,7 @@ from tqdm.auto import tqdm
 from typing import Tuple
 from dunesim import DEVICE
 
+tqdm = partial(tqdm, ascii=" =")
 _DataLoader = DataLoader[Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]
 
 
