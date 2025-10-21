@@ -4,6 +4,7 @@
 
 ### TODO
 
-- [ ] Train 3D UNet.
+- [X] Train 3D UNet.
+- [ ] Implement Conv LSTM.
 - [ ] Implement ATPPNet.
 - [ ] Fix MCVD.
