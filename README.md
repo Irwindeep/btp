@@ -7,4 +7,4 @@
 - [X] Train 3D UNet.
 - [ ] Implement Conv LSTM.
 - [ ] Implement ATPPNet.
-- [ ] Fix MCVD.
+- [X] Fix MCVD
