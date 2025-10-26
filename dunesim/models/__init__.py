@@ -1,6 +1,6 @@
 import dunesim.models.utils as utils
 from dunesim.models.unet3d import UNet3D
-from dunesim.models.unet import UNet
+from dunesim.models.mcvd import UNet
 
 __all__ = [
     "UNet",
