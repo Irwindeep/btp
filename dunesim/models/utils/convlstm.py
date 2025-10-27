@@ -166,8 +166,8 @@ class ConvLSTM(nn.Module):
             h_list, c_list = self._init_hidden(N, H, W, device=input.device)
         else:
             h_in, c_in = hidden_state
-            h_list = [h_in[i] for i in range(self.num_layers)]
-            c_list = [c_in[i] for i in range(self.num_layers)]
+            h_list = [h_in[:, i] for i in range(self.num_layers)]
+            c_list = [c_in[:, i] for i in range(self.num_layers)]
 
         output_inner = []
         for t in range(T):

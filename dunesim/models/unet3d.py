@@ -115,6 +115,8 @@ class UNet3D(nn.Module):
     def forward(self, input: torch.Tensor, aux: torch.Tensor) -> torch.Tensor:
         if len(aux.size()) == 4:
             aux = self.aux_embedding(aux.unsqueeze(1))
+        else:
+            aux = self.aux_embedding(aux)
 
         ch = input.size(2)  # [N, T, C, H, W]
         input = torch.cat([input, aux], dim=2)
