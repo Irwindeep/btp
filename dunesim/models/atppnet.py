@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from dunesim.models import UNet3D
+from dunesim.models.unet3d import UNet3D
 from dunesim.models.utils import ConvLSTM, Conv3dBlock
 
 
