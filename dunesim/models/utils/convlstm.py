@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from typing import Tuple
+from typing import List, Tuple, cast
 
 
 class ConvLSTMCell(nn.Module):
@@ -114,18 +114,45 @@ class ConvLSTM(nn.Module):
         input_dim: int,
         hidden_dim: int,
         kernel_size: int = 3,
+        num_layers: int = 1,
         bias: bool = True,
         peephole: bool = True,
     ) -> None:
         super().__init__()
 
-        self.cell = ConvLSTMCell(
-            input_dim=input_dim,
-            hidden_dim=hidden_dim,
-            kernel_size=kernel_size,
-            bias=bias,
-            peephole=peephole,
-        )
+        self.cells = nn.ModuleList()
+        for i in range(num_layers):
+            in_channs = input_dim if i == 0 else hidden_dim
+
+            cell = ConvLSTMCell(
+                input_dim=in_channs,
+                hidden_dim=hidden_dim,
+                kernel_size=kernel_size,
+                bias=bias,
+                peephole=peephole,
+            )
+            self.cells.append(cell)
+
+        self.hidden_dim = hidden_dim
+        self.num_layers = num_layers
+
+    def _init_hidden(
+        self,
+        batch_size: int,
+        height: int,
+        width: int,
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
+    ) -> Tuple[List[torch.Tensor], List[torch.Tensor]]:
+        h_list, c_list = [], []
+
+        for cell in self.cells:
+            cell = cast(ConvLSTMCell, cell)
+            h, c = cell.init_hidden(batch_size, height, width, device, dtype)
+            h_list.append(h)
+            c_list.append(c)
+
+        return h_list, c_list
 
     def forward(
         self,
@@ -136,17 +163,30 @@ class ConvLSTM(nn.Module):
         seq = input.permute(1, 0, 2, 3, 4)
 
         if hidden_state is None:
-            h, c = self.cell.init_hidden(N, H, W, device=input.device)
+            h_list, c_list = self._init_hidden(N, H, W, device=input.device)
         else:
-            h, c = hidden_state
+            h_in, c_in = hidden_state
+            h_list = [h_in[i] for i in range(self.num_layers)]
+            c_list = [c_in[i] for i in range(self.num_layers)]
 
         output_inner = []
         for t in range(T):
             x_t = seq[t]
-            h, c = self.cell(x_t, h, c)
-            output_inner.append(h)
+
+            for i, cell in enumerate(self.cells):
+                h_next, c_next = cell(x_t, h_list[i], c_list[i])
+
+                h_list[i] = h_next
+                c_list[i] = c_next
+
+                x_t = h_next
+
+            output_inner.append(x_t)
 
         output_seq = torch.stack(output_inner, dim=0)
         output_seq = output_seq.permute(1, 0, 2, 3, 4)
 
-        return output_seq, (h, c)
+        h_stack = torch.stack(h_list, dim=1)
+        c_stack = torch.stack(c_list, dim=1)
+
+        return output_seq, (h_stack, c_stack)
