@@ -22,13 +22,9 @@ def val_epoch(
     val_loss, num_batches = 0.0, len(val_loader)
     with torch.no_grad():
         for past, future, aux in val_loader:
-            T = past.size(1)
             past = past.to(DEVICE)
             future = future.to(DEVICE)
             aux = aux.to(DEVICE)
-
-            aux = aux.unsqueeze(1)
-            aux = aux.expand(-1, T, -1, -1, -1)
 
             with torch.autocast(DEVICE):
                 pred = model(past, aux)
