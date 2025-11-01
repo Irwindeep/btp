@@ -3,11 +3,18 @@ import numpy as np
 import torch
 
 from torch.utils.data import Dataset
-from typing import Tuple, Any
+from typing import Literal, Tuple
 
 
 class DunesimDataset(Dataset):
-    def __init__(self, root: str, memory: int, future: int) -> None:
+    def __init__(
+        self,
+        root: str,
+        split: Literal["train", "val"],
+        memory: int,
+        future: int,
+        random_seed: int = 12,
+    ) -> None:
         super().__init__()
 
         self.root = root
@@ -16,6 +23,22 @@ class DunesimDataset(Dataset):
         self.future = future
 
         self.data_dirs = [os.path.join(self.root, dir) for dir in os.listdir(self.root)]
+        np.random.seed(random_seed)
+        data_size = int(0.8 * len(self.data_dirs))
+        if split == "val":
+            data_size = len(self.data_dirs) - data_size
+
+        if split not in ["train", "val"]:
+            print(f"Invalid split provided: {split}")
+            print("Continuing with complete dataset")
+            data_size = len(self.data_dirs)
+
+        if data_size < len(self.data_dirs):
+            self.data_dirs = np.random.choice(
+                self.data_dirs,
+                size=data_size,
+                replace=False,
+            )
 
         self.samples = []
         for data_dir in self.data_dirs:
@@ -27,7 +50,7 @@ class DunesimDataset(Dataset):
     def __len__(self) -> int:
         return len(self.samples)
 
-    def __getitem__(self, idx: int) -> Tuple[Any, ...]:
+    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         data_dir, idx = self.samples[idx]
 
         bedrock_dir = os.path.join(data_dir, "bedrock")
