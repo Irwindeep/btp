@@ -27,20 +27,19 @@ class DunesimDataset(Dataset):
         self.data_dirs = [os.path.join(self.root, dir) for dir in os.listdir(self.root)]
         np.random.seed(random_seed)
         data_size = int(0.8 * len(self.data_dirs))
+        data_dirs = np.random.choice(self.data_dirs, size=data_size, replace=False)
+
         if split == "val":
             data_size = len(self.data_dirs) - data_size
+            data_dirs = list(set(self.data_dirs) - set(data_dirs))
 
         if split not in ["train", "val"]:
             print(f"Invalid split provided: {split}")
             print("Continuing with complete dataset")
             data_size = len(self.data_dirs)
+            data_dirs = self.data_dirs
 
-        if data_size < len(self.data_dirs):
-            self.data_dirs = np.random.choice(
-                self.data_dirs,
-                size=data_size,
-                replace=False,
-            )
+        self.data_dirs = sorted(data_dirs)
 
         self.samples = []
         for data_dir in self.data_dirs:
