@@ -3,7 +3,7 @@ import numpy as np
 import torch
 
 from torch.utils.data import Dataset
-from typing import Literal, Tuple
+from typing import Callable, Literal, Tuple
 
 
 class DunesimDataset(Dataset):
@@ -14,6 +14,7 @@ class DunesimDataset(Dataset):
         memory: int,
         future: int,
         random_seed: int = 12,
+        transform: Callable | None = None,
     ) -> None:
         super().__init__()
 
@@ -21,6 +22,7 @@ class DunesimDataset(Dataset):
 
         self.mem = memory
         self.future = future
+        self.transform = transform
 
         self.data_dirs = [os.path.join(self.root, dir) for dir in os.listdir(self.root)]
         np.random.seed(random_seed)
@@ -93,5 +95,9 @@ class DunesimDataset(Dataset):
             ]
         )
         auxiliary_tensor = torch.tensor(auxiliary_array)
+
+        if self.transform:
+            input_tensor = self.transform(input_tensor)
+            output_tensor = self.transform(output_tensor)
 
         return input_tensor, output_tensor, auxiliary_tensor
