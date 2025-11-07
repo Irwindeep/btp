@@ -9,7 +9,8 @@ np.random.seed(12)
 DATA_DIR = "dunesim_dataset"
 os.makedirs(DATA_DIR, exist_ok=True)
 
-nx, ny = 128, 128  # low resolution data for experiments
+nx, ny = 64, 64  # low resolution data for experiments
+grid_size = 256  # 256 x 256 bbox
 
 for i in tqdm(range(360), desc="Preparing Dataset"):
     r_min = np.random.uniform(low=0.5, high=5)
@@ -24,8 +25,7 @@ for i in tqdm(range(360), desc="Preparing Dataset"):
     vegetation = np.random.choice([0, 1], p=[0.7, 0.3])
     abration = np.random.choice([0, 1], p=[0.7, 0.3])
 
-    r = np.random.uniform(0, 1)
-    num_steps = int(100 + 100 * (r**4))
+    num_steps = 200
 
     dune = DuneSediment(
         nx,
@@ -33,6 +33,7 @@ for i in tqdm(range(360), desc="Preparing Dataset"):
         r_min=r_min,
         r_max=r_max,
         wind=(mean_wind_x, mean_wind_y),
+        cell_size=(grid_size / nx, grid_size / ny),
         vegetation_on=bool(vegetation),
         abrasion_on=bool(abration),
     )
