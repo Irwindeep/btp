@@ -10,7 +10,7 @@ DATA_DIR = "dunesim_dataset"
 os.makedirs(DATA_DIR, exist_ok=True)
 
 nx, ny = 64, 64  # low resolution data for experiments
-grid_size = 256  # 256 x 256 bbox
+grid_size = 256  # 256 x 256 bbox (pixel resolution)
 
 for i in tqdm(range(360), desc="Preparing Dataset"):
     r_min = np.random.uniform(low=0.5, high=5)
