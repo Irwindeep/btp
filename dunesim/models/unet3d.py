@@ -88,7 +88,9 @@ class UNet3D(nn.Module):
         in_channels: int,
         out_channels: int,
         down_channels: int,
-        aux_channels: int = 1,
+        aux_channels: int = 4,
+        image_size: int = 128,
+        hidden_dim: int = 128,
         channel_multipliers: List[int] = [1, 2, 2, 4],
     ) -> None:
         """
@@ -97,7 +99,12 @@ class UNet3D(nn.Module):
             out_channels: number of output time channels i.e., future
         """
         super(UNet3D, self).__init__()
-        self.aux_embedding = Conv3dBlock(aux_channels, in_channels)
+        self.aux_embedding = nn.Sequential(
+            nn.Linear(
+                in_features=aux_channels * (image_size**2), out_features=hidden_dim
+            ),
+            nn.ReLU(),
+        )
 
         self.initial = nn.Conv3d(in_channels, down_channels, kernel_size=3, padding=1)
 
@@ -105,26 +112,47 @@ class UNet3D(nn.Module):
         self.encoder = Encoder3D(channels=encoder_channels)
         self.bottleneck = nn.Sequential(
             Conv3dBlock(encoder_channels[-1], 2 * encoder_channels[-1]),
+            nn.AdaptiveAvgPool3d(output_size=1),
+            nn.Flatten(),
+            nn.Linear(2 * encoder_channels[-1], hidden_dim),
+            nn.ReLU(),
+        )
+        self.bottleneck_decoder = nn.Sequential(
+            nn.Linear(
+                2 * hidden_dim,
+                (2 * encoder_channels[-1])
+                * 2
+                * (image_size // (2 ** (len(encoder_channels) - 1))) ** 2,
+            ),
+            nn.ReLU(),
+            nn.Unflatten(
+                dim=1,
+                unflattened_size=(
+                    2 * encoder_channels[-1],
+                    2,
+                    image_size // (2 ** (len(encoder_channels) - 1)),
+                    image_size // (2 ** (len(encoder_channels) - 1)),
+                ),
+            ),
             Conv3dBlock(2 * encoder_channels[-1], encoder_channels[-1]),
         )
+
         self.decoder = Decoder3D(encoder_channels=encoder_channels)
 
         # use batchnorm and relu for now as heightmap must always be positive
         self.final = Conv3dBlock(down_channels, out_channels)
 
     def forward(self, input: torch.Tensor, aux: torch.Tensor) -> torch.Tensor:
-        if len(aux.size()) == 4:
-            aux = self.aux_embedding(aux.unsqueeze(1))
-        else:
-            aux = self.aux_embedding(aux)
-
-        ch = input.size(2)  # [N, T, C, H, W]
-        input = torch.cat([input, aux], dim=2)
+        aux = self.aux_embedding(aux.flatten(1))
 
         output = self.initial(input)
         output, outputs = self.encoder(output)
+
         output = self.bottleneck(output)
+        output = torch.cat([output, aux], dim=-1)
+        output = self.bottleneck_decoder(output)
+
         output = self.decoder((output, outputs))
         output = self.final(output)
 
-        return output[:, :, :ch, :, :]
+        return output
