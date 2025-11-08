@@ -120,7 +120,7 @@ class UNet3D(nn.Module):
         self.bottleneck_decoder = nn.Sequential(
             nn.Linear(
                 2 * hidden_dim,
-                (2 * encoder_channels[-1])
+                encoder_channels[-1]
                 * 2
                 * (image_size // (2 ** (len(encoder_channels) - 1))) ** 2,
             ),
@@ -128,13 +128,12 @@ class UNet3D(nn.Module):
             nn.Unflatten(
                 dim=1,
                 unflattened_size=(
-                    2 * encoder_channels[-1],
+                    encoder_channels[-1],
                     2,
                     image_size // (2 ** (len(encoder_channels) - 1)),
                     image_size // (2 ** (len(encoder_channels) - 1)),
                 ),
             ),
-            Conv3dBlock(2 * encoder_channels[-1], encoder_channels[-1]),
         )
 
         self.decoder = Decoder3D(encoder_channels=encoder_channels)
